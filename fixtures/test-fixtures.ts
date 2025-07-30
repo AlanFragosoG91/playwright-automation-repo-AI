@@ -27,7 +27,7 @@ export const test = base.extend<{
   },
 
   apiHelper: async ({ request }, use) => {
-    const apiHelper = new ApiHelper(request, process.env.API_BASE_URL || '');
+    const apiHelper = new ApiHelper(request, process.env.BASE_URL || process.env.API_BASE_URL || 'https://jsonplaceholder.typicode.com');
     await use(apiHelper);
   }
 });

@@ -34,7 +34,7 @@ jobs:
     - name: Run Playwright tests
       run: npx playwright test
       env:
-        BASE_URL: https://playwright.dev
+        BASE_URL: https://jsonplaceholder.typicode.com
         
     - uses: actions/upload-artifact@v4
       if: ${{ !cancelled() }}
