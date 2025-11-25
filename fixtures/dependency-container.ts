@@ -54,15 +54,30 @@ export class DependencyContainer {
   }
 
   /**
+   * Clear cached page-related instances
+   * Used when page changes or during cleanup
+   */
+  private clearPageCache(): void {
+    this._playwrightHomePage = null;
+    this._todoPage = null;
+    this._localStorageHelper = null;
+  }
+
+  /**
+   * Clear cached API-related instances
+   * Used when request context changes or during cleanup
+   */
+  private clearApiCache(): void {
+    this._apiHelper = null;
+  }
+
+  /**
    * Initialize the container with a Playwright Page instance
    * Call this method to enable page-based dependencies
    */
   initializePage(page: Page): void {
     this.page = page;
-    // Clear cached instances when page changes
-    this._playwrightHomePage = null;
-    this._todoPage = null;
-    this._localStorageHelper = null;
+    this.clearPageCache();
   }
 
   /**
@@ -71,8 +86,7 @@ export class DependencyContainer {
    */
   initializeApi(request: APIRequestContext): void {
     this.request = request;
-    // Clear cached instance when request context changes
-    this._apiHelper = null;
+    this.clearApiCache();
   }
 
   /**
@@ -180,15 +194,14 @@ export class DependencyContainer {
    * Useful for resetting state between tests if needed
    */
   clearCache(): void {
-    this._playwrightHomePage = null;
-    this._todoPage = null;
-    this._localStorageHelper = null;
-    this._apiHelper = null;
+    this.clearPageCache();
+    this.clearApiCache();
   }
 
   /**
    * Get all page dependencies at once
-   * Useful when you need multiple dependencies in a test
+   * Note: This will initialize all page dependencies. Use individual getters
+   * if you only need a subset of dependencies.
    */
   getPageDependencies(): PageDependencies {
     return {
@@ -209,7 +222,9 @@ export class DependencyContainer {
 
   /**
    * Get all dependencies at once
-   * Note: Requires both page and request to be initialized
+   * Note: Requires both page and request to be initialized.
+   * This will initialize all dependencies. Use individual getters
+   * if you only need a subset of dependencies.
    */
   getAllDependencies(): TestDependencies {
     return {
