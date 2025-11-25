@@ -134,10 +134,12 @@ test('api test', async ({ apiHelper }) => {
 El workflow incluye:
 
 - ✅ Caché de dependencias npm
-- ✅ Caché de navegadores Playwright
+- ✅ Caché de navegadores Playwright (con instalación condicional)
 - ✅ Ejecución en múltiples navegadores
 - ✅ Artefactos de reportes y resultados
 - ✅ Variables de entorno
+- ✅ Cancelación automática de ejecuciones duplicadas
+- ✅ Variable CI habilitada para optimizaciones de pruebas
 
 ## 🐛 Debugging
 
