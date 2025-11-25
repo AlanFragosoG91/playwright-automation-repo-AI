@@ -3,32 +3,54 @@ import { PlaywrightHomePage } from '../pages/playwright-home.page';
 import { TodoPage } from '../pages/todo.page';
 import { LocalStorageHelper } from '../helpers/localStorage.helper';
 import { ApiHelper } from '../helpers/api.helper';
+import { DependencyContainer, createDependencyContainer } from './dependency-container';
 
-// Extend the base test with our page objects and helpers
+/**
+ * Extended test fixtures with Dependency Injection pattern
+ * 
+ * The DependencyContainer manages all test dependencies centrally,
+ * providing a clean and maintainable way to access page objects and helpers.
+ * 
+ * Available fixtures:
+ * - dependencyContainer: The central container for all dependencies
+ * - playwrightHomePage: Page object for Playwright homepage
+ * - todoPage: Page object for Todo application
+ * - localStorageHelper: Helper for localStorage operations
+ * - apiHelper: Helper for API requests
+ */
 export const test = base.extend<{
+  dependencyContainer: DependencyContainer;
   playwrightHomePage: PlaywrightHomePage;
   todoPage: TodoPage;
   localStorageHelper: LocalStorageHelper;
   apiHelper: ApiHelper;
 }>({
-  playwrightHomePage: async ({ page }, use) => {
-    const playwrightHomePage = new PlaywrightHomePage(page);
-    await use(playwrightHomePage);
+  // The central dependency container - initialized once per test
+  dependencyContainer: async ({ page, request }, use) => {
+    const container = createDependencyContainer();
+    container.initializePage(page);
+    container.initializeApi(request);
+    await use(container);
+    // Clear cache after test completes
+    container.clearCache();
   },
 
-  todoPage: async ({ page }, use) => {
-    const todoPage = new TodoPage(page);
-    await use(todoPage);
+  // Page object dependencies - retrieved from the container
+  playwrightHomePage: async ({ dependencyContainer }, use) => {
+    await use(dependencyContainer.playwrightHomePage);
   },
 
-  localStorageHelper: async ({ page }, use) => {
-    const localStorageHelper = new LocalStorageHelper(page);
-    await use(localStorageHelper);
+  todoPage: async ({ dependencyContainer }, use) => {
+    await use(dependencyContainer.todoPage);
   },
 
-  apiHelper: async ({ request }, use) => {
-    const apiHelper = new ApiHelper(request, process.env.BASE_URL || process.env.API_BASE_URL || 'https://jsonplaceholder.typicode.com');
-    await use(apiHelper);
+  localStorageHelper: async ({ dependencyContainer }, use) => {
+    await use(dependencyContainer.localStorageHelper);
+  },
+
+  // API helper - retrieved from the container
+  apiHelper: async ({ dependencyContainer }, use) => {
+    await use(dependencyContainer.apiHelper);
   }
 });
 
