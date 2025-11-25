@@ -4,10 +4,16 @@ on:
     branches: [ main, master ]
   pull_request:
     branches: [ main, master ]
+  workflow_dispatch:
+
 jobs:
   test:
     timeout-minutes: 60
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2]
     steps:
     - uses: actions/checkout@v4
     
@@ -32,20 +38,29 @@ jobs:
       run: npx playwright install --with-deps
       
     - name: Run Playwright tests
-      run: npx playwright test
+      run: npx playwright test --shard=${{ matrix.shard }}/${{ strategy.job-total }}
       env:
-        BASE_URL: https://jsonplaceholder.typicode.com
+        BASE_URL: https://playwright.dev
+        TODO_APP_URL: https://demo.playwright.dev/todomvc
+        API_BASE_URL: https://jsonplaceholder.typicode.com
         
     - uses: actions/upload-artifact@v4
       if: ${{ !cancelled() }}
       with:
-        name: playwright-report
+        name: playwright-report-${{ matrix.shard }}
         path: playwright-report/
         retention-days: 30
         
     - uses: actions/upload-artifact@v4
       if: failure()
       with:
-        name: test-results
+        name: test-results-${{ matrix.shard }}
         path: test-results/
         retention-days: 30
+        
+    - uses: actions/upload-artifact@v4
+      if: failure()
+      with:
+        name: playwright-traces-${{ matrix.shard }}
+        path: test-results/**/trace.zip
+        retention-days: 7
