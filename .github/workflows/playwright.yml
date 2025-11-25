@@ -4,6 +4,12 @@ on:
     branches: [ main, master ]
   pull_request:
     branches: [ main, master ]
+
+# Cancel in-progress runs when a new run is triggered on the same branch
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test:
     timeout-minutes: 60
@@ -17,6 +23,7 @@ jobs:
         cache: 'npm'
     
     - name: Cache Playwright browsers
+      id: playwright-cache
       uses: actions/cache@v4
       with:
         path: |
@@ -29,12 +36,18 @@ jobs:
       run: npm ci
       
     - name: Install Playwright Browsers
+      if: steps.playwright-cache.outputs.cache-hit != 'true'
       run: npx playwright install --with-deps
+      
+    - name: Install Playwright dependencies (cached)
+      if: steps.playwright-cache.outputs.cache-hit == 'true'
+      run: npx playwright install-deps
       
     - name: Run Playwright tests
       run: npx playwright test
       env:
         BASE_URL: https://jsonplaceholder.typicode.com
+        CI: true
         
     - uses: actions/upload-artifact@v4
       if: ${{ !cancelled() }}
